@@ -9,17 +9,18 @@ AC_INIT([Cast Generator Tool],
 AC_CONFIG_SRCDIR([casegen.cpp])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([build-aux/config.h])
-AC_PROG_RANLIB
+AC_CONFIG_MACRO_DIR([m4])
+# AC_PROG_RANLIB
 
-# LT_INIT
+LT_INIT
 # AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([1.11])
 
 # Checks for programs.
 # AC_PROG_CC
-# AC_PROG_CXX
-# AC_LANG([C++])
+AC_PROG_CXX
+AC_LANG([C++])
 # AC_PROG_LIBTOOL
 : ${CXXFLAGS="-g"}
 AC_PROG_CXX
