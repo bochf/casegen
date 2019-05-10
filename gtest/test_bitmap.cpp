@@ -386,8 +386,3 @@ TEST(BitMap2, exception) {
   EXPECT_THROW(bm1 &= bm2, std::out_of_range);
   EXPECT_THROW(bm1 |= bm2, std::out_of_range);
 }
-
-GTEST_API_ int main(int argc, char ** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

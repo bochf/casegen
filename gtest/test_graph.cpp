@@ -125,8 +125,3 @@ TEST_F(GraphTest, eulerwalk) {
   pTraveller->travel(g, trace);
 	cout << trace << endl;
 }
-
-GTEST_API_ int main(int argc, char ** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
