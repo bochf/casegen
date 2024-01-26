@@ -1,2 +1,2 @@
-file(GLOB casegen_src "*.h" "*.cpp")
-add_executable (casegen ${casegen_src})
+add_executable (casegen main.cpp)
+target_link_libraries(casegen traveller)

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 
-#include "gtest/gtest.h"
-#include "bitmap.h"
+#include <bitmap.h>
+#include <gtest/gtest.h>
 
 TEST(BitMap, create) {
   BitMap bitmap(10);

@@ -1,17 +1,16 @@
 #include <iostream>
 #include <string>
 
-#include "gtest/gtest.h"
-#include "graph.h"
-#include "traveller.h"
+#include <gtest/gtest.h>
+
+#include <graph.h>
+#include <traveller.h>
 
 Graph g;
 
 class GraphTest : public ::testing::Test {
  protected:
-  static void SetUpTestCase() {
-    g.init("m.txt");
-  }
+   static void SetUpTestCase() { g.init("test_matrix.txt"); }
 };
 
 TEST_F(GraphTest, create) {

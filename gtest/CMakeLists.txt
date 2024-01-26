@@ -30,12 +30,10 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
-include_directories(../src)
-file(GLOB test_src
-     "*.h"
-     "*.cpp"
-     "../src/bitmap.cpp"
-     "../src/graph.cpp"
-     "../src/traveller.cpp")
-add_executable (test_casegen ${test_src})
-target_link_libraries(test_casegen gtest_main)
+aux_source_directory(. test_src)
+add_executable(test_traveller ${test_src})
+target_link_libraries(test_traveller traveller)
+target_link_libraries(test_traveller GTest::gtest_main)
+
+add_test(NAME test_traveller COMMAND test_traveller)
+file(COPY test_matrix.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
