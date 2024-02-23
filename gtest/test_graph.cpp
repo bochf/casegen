@@ -16,9 +16,9 @@ class GraphTest : public ::testing::Test {
 TEST_F(GraphTest, create) {
   EXPECT_TRUE(g.good());
   g.dump();
-  IGraphTraveller * pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_BFS_ALL);
+  auto pTraveller =
+      IGraphTraveller::createInstance(IGraphTraveller::GT_BFS_ALL);
   EXPECT_FALSE(NULL == pTraveller);
-  delete pTraveller;
 }
 
 /*
@@ -68,16 +68,17 @@ TEST_F(GraphTest, SearchAll) {
 
 TEST_F(GraphTest, SearchDfs) {
   // g.dump();
-  IGraphTraveller * pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_DFS);
-	string trace;
+  auto pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_DFS);
+  string trace;
   pTraveller->travel(g, trace);
 	cout << trace << endl;
 }
 
 TEST_F(GraphTest, SearchDfsPath) {
   // g.dump();
-  IGraphTraveller * pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_DFS_PATH);
-	string trace;
+  auto pTraveller =
+      IGraphTraveller::createInstance(IGraphTraveller::GT_DFS_PATH);
+  string trace;
   pTraveller->travel(g, trace);
 	cout << trace << endl;
 }
@@ -99,7 +100,8 @@ TEST_F(GraphTest, Shortest) {
 }
 
 TEST_F(GraphTest, SearchOne) {
-  IGraphTraveller * pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_BFS_ONE);
+  auto pTraveller =
+      IGraphTraveller::createInstance(IGraphTraveller::GT_BFS_ONE);
   Properties config;
   for (size_t start = 0; start < g.size(); ++start) {
     for (size_t end = 0; end < g.size(); ++end) {
@@ -119,8 +121,8 @@ TEST_F(GraphTest, eulerization) {
 
 TEST_F(GraphTest, eulerwalk) {
   g.eulerize();
-  IGraphTraveller * pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_EULER);
-	string trace;
+  auto pTraveller = IGraphTraveller::createInstance(IGraphTraveller::GT_EULER);
+  string trace;
   pTraveller->travel(g, trace);
 	cout << trace << endl;
 }

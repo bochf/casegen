@@ -1,0 +1,1 @@
+DEBUG:root:Program starts. options=Namespace(file=None, strategy='path', begin=0, end=0, print=False, log='casegen.log', verbose=True)

@@ -2,36 +2,33 @@
  *
  */
 
-#ifndef __STATE_MACHINE_H__
-#define __STATE_MACHINE_H__
+#ifndef CASEGEN_STATE_MACHINE_H_
+#define CASEGEN_STATE_MACHINE_H_
 
 #include "bitmap.h"
 #include "graph.h"
 #include "traveller.h"
 
-#include <vector>
+#include <cstddef>
+#include <memory>
 #include <string>
-
-using namespace std;
+#include <vector>
 
 class StateMachine {
- public:
-  StateMachine() : m_pTrasition(NULL) {
-  };
+public:
+  Graph *generate(const std::string &state_file);
+  void load(const std::string &state_file);
 
-  virtual Graph * generate(const string & state_file);
-  virtual Graph * load(const string & state_file);
+  std::string cases();
 
-	virtual string cases();
+  void configure(const Properties &config);
 
-	virtual void configure(const Properties & config);
+  size_t size() const { return m_StateEvent.size(); };
 
-	inline virtual size_t size() const { return m_StateEvent.size(); };
-
- private:
-  Graph * generate(const size_t rows, const size_t cols, size_t * states[]);
+private:
+  Graph *generate(size_t rows, size_t cols, size_t *states[]);
   Graph m_StateEvent;
-  IGraphTraveller * m_pTrasition;
+  std::shared_ptr<IGraphTraveller> m_pTrasition = nullptr;
 };
 
 #endif

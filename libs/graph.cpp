@@ -1,10 +1,10 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <cstring>
-#include <queue>
 #include <algorithm>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <queue>
+#include <sstream>
+#include <string>
 
 #include "bitmap.h"
 #include "graph.h"
@@ -12,9 +12,7 @@
 
 using namespace std;
 
-Graph::Graph() :
-  m_reach_table(NULL) {
-}
+Graph::Graph() : m_reach_table(NULL) {}
 
 Graph::~Graph() {
   for (VERTEX_ID i = 0; i < size(); i++)
@@ -70,7 +68,7 @@ void Graph::init(const string matrix_file) {
     stringstream ss(rows[i]);
     while (ss.good()) {
       ss >> dest_v_id;
-      Link * l = link(i, dest_v_id, type++);
+      Link *l = link(i, dest_v_id, type++);
       /*
       if (l) {
         m_net[i].push_back(l);
@@ -79,9 +77,9 @@ void Graph::init(const string matrix_file) {
     }
     if (m_edge_types.size() != type) {
       // matrix does not have same columns in each line
-      cerr << "asymmetric matrix, line " << i - 1 << " has " << m_edge_types.size() << " columns, but line " << i << " has "
-           <<
-           type << " columns" << endl;
+      cerr << "asymmetric matrix, line " << i - 1 << " has "
+           << m_edge_types.size() << " columns, but line " << i << " has "
+           << type << " columns" << endl;
       mf.close();
       return;
     }
@@ -97,7 +95,8 @@ void Graph::dump() {
   if (!m_vertices.empty()) {
     cout << "Vertices: " << m_vertices.size() << endl;
     for (size_t i = 0; i < m_vertices.size(); ++i) {
-      cout << " " << m_vertices[i]->name() << " in=" << m_vertices[i]->in_degree << " out=" << m_vertices[i]->out_degree;
+      cout << " " << m_vertices[i]->name() << " in=" << m_vertices[i]->in_degree
+           << " out=" << m_vertices[i]->out_degree;
     }
     cout << endl;
   }
@@ -113,10 +112,9 @@ void Graph::dump() {
   if (!m_links.empty()) {
     cout << "Links: " << m_links.size() << endl;
     for (size_t i = 0; i < m_links.size(); ++i) {
-      cout << " (" << m_links[i]->from->name()
-           << ", " << m_links[i]->edge->name()
-           << ", " << m_links[i]->to->name()
-           << ", " << m_links[i]->balance() << ")";
+      cout << " (" << m_links[i]->from->name() << ", "
+           << m_links[i]->edge->name() << ", " << m_links[i]->to->name() << ", "
+           << m_links[i]->balance() << ")";
     }
     cout << endl;
   }
@@ -125,7 +123,8 @@ void Graph::dump() {
     cout << "Adjacencies:" << m_links.size() << endl;
     for (size_t m = 0; m < m_net.size(); ++m) {
       for (size_t i = 0; i < m_net[m].size(); ++i) {
-        cout << " " << m_net[m][i]->from->name() << "--" << m_net[m][i]->edge->name() << "-->" << m_net[m][i]->to->name();
+        cout << " " << m_net[m][i]->from->name() << "--"
+             << m_net[m][i]->edge->name() << "-->" << m_net[m][i]->to->name();
       }
       cout << endl;
     }
@@ -135,22 +134,26 @@ void Graph::dump() {
   // print arrow vertices, fork vertices and bridge links
   cout << "Balanced vertices:" << m_equals.size() << endl;
   for (VertexList::iterator it = m_equals.begin(); it != m_equals.end(); ++it) {
-    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", " << (*it)->out_degree << ")";
+    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", "
+         << (*it)->out_degree << ")";
   }
   cout << endl;
   cout << "Arrow vertices:" << m_arrows.size() << endl;
   for (VertexList::iterator it = m_arrows.begin(); it != m_arrows.end(); ++it) {
-    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", " << (*it)->out_degree << ")";
+    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", "
+         << (*it)->out_degree << ")";
   }
   cout << endl;
   cout << "Fork vertices:" << m_forks.size() << endl;
   for (VertexList::iterator it = m_forks.begin(); it != m_forks.end(); ++it) {
-    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", " << (*it)->out_degree << ")";
+    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", "
+         << (*it)->out_degree << ")";
   }
   cout << endl;
 }
 
-Link * Graph::link(const VERTEX_ID v1, const VERTEX_ID v2, const EDGE_TYPE type) {
+Link *Graph::link(const VERTEX_ID v1, const VERTEX_ID v2,
+                  const EDGE_TYPE type) {
   if (m_edge_types.size() == type) {
     m_edge_types.push_back(new GraphElement(type, ""));
   }
@@ -167,8 +170,8 @@ Link * Graph::link(const VERTEX_ID v1, const VERTEX_ID v2, const EDGE_TYPE type)
   }
   */
 
-  Edge * edge = new Edge(m_links.size(), "", type);
-  Link * link = new Link(m_vertices[v1], m_vertices[v2], edge);
+  Edge *edge = new Edge(m_links.size(), "", type);
+  Link *link = new Link(m_vertices[v1], m_vertices[v2], edge);
   m_links.push_back(link);
   m_net[v1].push_back(link);
   m_vertices[v1]->out_degree++;
@@ -205,32 +208,33 @@ void Graph::eulerize() {
     divide();
 
     bridges.clear();
-    for (VertexList::const_iterator arrow = m_arrows.begin(); arrow != m_arrows.end(); ++arrow)
-      for (VertexList::const_iterator fork = m_forks.begin(); fork != m_forks.end(); ++fork) {
-        LinkList * bridge = GraphTravellerBfs::shortestPath(this, *arrow, *fork);
+    for (VertexList::const_iterator arrow = m_arrows.begin();
+         arrow != m_arrows.end(); ++arrow)
+      for (VertexList::const_iterator fork = m_forks.begin();
+           fork != m_forks.end(); ++fork) {
+        LinkList *bridge = GraphTravellerBfs::shortestPath(this, *arrow, *fork);
         if (bridge) {
           bridges.push_back(bridge);
         }
       }
 
     std::sort(bridges.begin(), bridges.end(), Graph::compareByLength);
-    for (vector<LinkList *>::const_iterator bridge = bridges.begin(); bridge != bridges.end(); ++bridge) {
-      Link * left = (*bridge)->front();
-      Link * right = (*bridge)->back();
+    for (vector<LinkList *>::const_iterator bridge = bridges.begin();
+         bridge != bridges.end(); ++bridge) {
+      Link *left = (*bridge)->front();
+      Link *right = (*bridge)->back();
       while (left->from->balance() > 0 && right->to->balance() < 0) {
         clonePath(**bridge);
       }
     }
-    //dump();
+    // dump();
   } while (!bridges.empty());
-	dump();
+  dump();
 }
 
-const size_t Graph::size() const {
-  return m_vertices.size();
-}
+const size_t Graph::size() const { return m_vertices.size(); }
 
-const LinkList & Graph::getAdjacencies(const VERTEX_ID v_id) const {
+const LinkList &Graph::getAdjacencies(const VERTEX_ID v_id) const {
   if (v_id >= m_net.size()) {
     throw std::out_of_range("vertex id is too big");
   }
@@ -244,7 +248,7 @@ void Graph::scan() {
   // set initial value to 0
 
   m_reach_table = new BitMap2(m_vertices.size(), m_vertices.size());
-  BitMap * visit_table = new BitMap(m_vertices.size());
+  BitMap *visit_table = new BitMap(m_vertices.size());
   for (VERTEX_ID v = 0; v < m_vertices.size(); ++v) {
     visit_table->reset();
 
@@ -257,7 +261,8 @@ void Graph::scan() {
       VERTEX_ID w = q.front();
       q.pop();
 
-      for (LinkList::iterator it = m_net[w].begin(); it != m_net[w].end(); ++it) {
+      for (LinkList::iterator it = m_net[w].begin(); it != m_net[w].end();
+           ++it) {
         VERTEX_ID x = (*it)->to->id;
         if (visit_table->get(x) == 1) {
           continue;
@@ -277,7 +282,8 @@ void Graph::divide() {
   m_arrows.clear();
   m_equals.clear();
 
-  for (VertexList::iterator it = m_vertices.begin(); it != m_vertices.end(); ++it) {
+  for (VertexList::iterator it = m_vertices.begin(); it != m_vertices.end();
+       ++it) {
     if ((*it)->balance() == 0) { // balanced node
       m_equals.push_back(*it);
     } else if ((*it)->balance() > 0) { // in degree is greater than out degree
@@ -327,8 +333,8 @@ void Graph::merge() {
       disconnect(start->id, end->id, &merge_trace);
       disconnect(end->id, start->id, &merge_trace);
       // add all adjacencies of end to start
-      for (LinkList::iterator it = m_net[end->id].begin(); it != m_net[end->id].end(); ++it) {
-        link(start->id, (*it)->to->id, (*it)->edge->type);
+      for (LinkList::iterator it = m_net[end->id].begin(); it !=
+m_net[end->id].end(); ++it) { link(start->id, (*it)->to->id, (*it)->edge->type);
       }
       m_net[end->id].clear();
       // move all the adjacencies point to end to start
@@ -346,8 +352,8 @@ void Graph::merge() {
   }
 }
 
-void Graph::disconnect(const VERTEX_ID v1, const VERTEX_ID v2, LinkList * track) {
-  for (LinkList::iterator it = m_net[v1].begin(); it != m_net[v1].end(); ++it) {
+void Graph::disconnect(const VERTEX_ID v1, const VERTEX_ID v2, LinkList * track)
+{ for (LinkList::iterator it = m_net[v1].begin(); it != m_net[v1].end(); ++it) {
     if (v2 == (*it)->to->id) {
       if (track) {
         track->push_back(m_links[(*it)->edge->id]);
@@ -361,7 +367,8 @@ void Graph::disconnect(const VERTEX_ID v1, const VERTEX_ID v2, LinkList * track)
   }
 }
 
-void Graph::reconnect(const VERTEX_ID a, const VERTEX_ID b, const VERTEX_ID c, LinkList * track) {
+void Graph::reconnect(const VERTEX_ID a, const VERTEX_ID b, const VERTEX_ID c,
+LinkList * track) {
   // change the link from a-->b to a-->c
   // LinkList adj = m_net[a]
   if (b == c) {
