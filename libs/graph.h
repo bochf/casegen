@@ -105,7 +105,7 @@ struct Link {
   }
 };
 
-typedef vector<GraphElement *> EdgeTypeList;
+typedef vector<GraphElement *> EdgeList;
 typedef vector<Vertex *> VertexList;
 typedef vector<Link *> LinkList;
 
@@ -166,7 +166,7 @@ class Graph {
 
   VertexList m_vertices;
   LinkList m_links;
-  EdgeTypeList m_edge_types;
+  EdgeList   m_edge_types;
 
   BitMap2 * m_reach_table;  // a 2D bit map saving the reachable info of 2 vertices
 

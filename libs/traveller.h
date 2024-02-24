@@ -19,13 +19,21 @@ public:
     GT_EULER
   };
 
-  IGraphTraveller(){};
-  virtual ~IGraphTraveller(){};
+  IGraphTraveller()          = default;
+  virtual ~IGraphTraveller() = default;
 
+  // disable copy, assignment and move constructors
+  IGraphTraveller(const IGraphTraveller &rhs)            = delete;
+  IGraphTraveller &operator=(const IGraphTraveller &rhs) = delete;
+  IGraphTraveller(const IGraphTraveller &&rhs)           = delete;
+
+  // interfaces
   virtual void            travel(const Graph &g, string &trace) = 0;
   virtual void            configure(const Properties &config)   = 0;
   virtual GT_ALGORITHM    algorithm()                           = 0;
-  static IGraphTraveller *createInstance(const GT_ALGORITHM algorithm);
+
+  // factory
+  static IGraphTraveller *createInstance(const GT_ALGORITHM &algorithm);
 
 protected:
 };

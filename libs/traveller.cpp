@@ -1,5 +1,6 @@
 #include "traveller.h"
 #include "graph.h"
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -12,7 +13,8 @@
 
 using namespace std;
 
-IGraphTraveller * IGraphTraveller::createInstance(const GT_ALGORITHM algorithm) {
+IGraphTraveller *
+IGraphTraveller::createInstance(const GT_ALGORITHM &algorithm) {
   IGraphTraveller * pInstance = NULL;
   switch (algorithm) {
   case GT_BFS: {
