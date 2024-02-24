@@ -203,5 +203,6 @@ return 0;
       stateMachine.configure(config);
       cout << stateMachine.cases() << endl;
     }
+  }
   return 0;
 }

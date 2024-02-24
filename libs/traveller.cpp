@@ -8,6 +8,13 @@
 #include <cstring>
 #include <stack>
 #include <algorithm>
+#include <cstring>
+#include <iostream>
+#include <memory>
+#include <queue>
+#include <sstream>
+#include <stack>
+#include <string>
 
 #include "bitmap.h"
 
@@ -17,38 +24,24 @@ IGraphTraveller *
 IGraphTraveller::createInstance(const GT_ALGORITHM &algorithm) {
   IGraphTraveller * pInstance = NULL;
   switch (algorithm) {
-  case GT_BFS: {
-    pInstance = new GraphTravellerBfs();
-  }
-  break;
-  case GT_DFS: {
-    pInstance = new GraphTravellerDfs();
-  }
-  break;
-  case GT_BFS_ALL: {
-    pInstance = new GraphTravellerBfsAll();
-  }
-  break;
-  case GT_BFS_ONE: {
-    pInstance = new GraphTravellerBfsOne();
-  }
-  break;
-  case GT_DFS_PATH: {
-    pInstance = new GraphTravellerDfsPath();
-  }
-  break;
-  case GT_EULER: {
-    pInstance = new GraphTravellerEuler();
-  }
-  break;
+  case GT_BFS:
+    return make_shared<GraphTravellerBfs>();
+  case GT_DFS:
+    return make_shared<GraphTravellerDfs>();
+  case GT_BFS_ALL:
+    return make_shared<GraphTravellerBfsAll>();
+  case GT_BFS_ONE:
+    return make_shared<GraphTravellerBfsOne>();
+  case GT_DFS_PATH:
+    return make_shared<GraphTravellerDfsPath>();
+  case GT_EULER:
+    return make_shared<GraphTravellerEuler>();
   default:
-    break;
+    return nullptr;
   }
-
-  return pInstance;
 }
 
-void GraphTravellerDfs::travel(const Graph & g, string & trace) {
+void GraphTravellerDfs::travel(const Graph &g, string &trace) {
   if (g.size() == 0) {
     return;
   }
@@ -74,7 +67,8 @@ void GraphTravellerDfs::travel(const Graph & g, string & trace) {
     // exercise the vertex
     // push all the unvisited neighbor of this vertex in to stack
     LinkList adj = g.getAdjacencies(v);
-    bool path_terminated = true; // if can't go further, mark the vertex as terminator
+    bool path_terminated =
+        true; // if can't go further, mark the vertex as terminator
     for (size_t i = 0; i < adj.size(); ++i) {
       VERTEX_ID w = adj[i]->to->id;
       if (isVisited(w)) {
@@ -97,7 +91,7 @@ void GraphTravellerDfs::travel(const Graph & g, string & trace) {
   }
 }
 
-void GraphTravellerDfs::startOver(const Graph & g) {
+void GraphTravellerDfs::startOver(const Graph &g) {
   // reset visit table
   if (m_visit_table) {
     delete m_visit_table;
@@ -125,9 +119,10 @@ bool GraphTravellerDfs::isVisited(const VERTEX_ID v_id) const {
   return m_visit_table->get(v_id);
 }
 
-string GraphTravellerDfs::print(const VERTEX_ID start, const VERTEX_ID end, const LinkList & backtrack) const {
+string GraphTravellerDfs::print(const VERTEX_ID start, const VERTEX_ID end,
+                                const LinkList &backtrack) const {
   string path;
-  Link * link = backtrack[end];
+  Link *link = backtrack[end];
   if (NULL == link) {
     throw std::runtime_error("trace link is null");
   }
@@ -141,11 +136,11 @@ string GraphTravellerDfs::print(const VERTEX_ID start, const VERTEX_ID end, cons
     link = backtrack[link->from->id];
   }
 
-	path += "\n";
+  path += "\n";
   return path;
 }
 
-void GraphTravellerDfsPath::travel(const Graph & g, string & trace) {
+void GraphTravellerDfsPath::travel(const Graph &g, string &trace) {
   if (g.size() == 0) {
     return;
   }
@@ -161,10 +156,11 @@ void GraphTravellerDfsPath::travel(const Graph & g, string & trace) {
   }
 }
 
-void GraphTravellerDfsPath::travel(const Graph & g, const LINK_ID e, string & trace) {
+void GraphTravellerDfsPath::travel(const Graph &g, const LINK_ID e,
+                                   string &trace) {
   LinkList backtrack;
 
-  Link * link = g.getLink(e);
+  Link *link = g.getLink(e);
   backtrack.push_back(g.getLink(e));
   visit(e);
 
@@ -188,10 +184,10 @@ void GraphTravellerDfsPath::travel(const Graph & g, const LINK_ID e, string & tr
     link = g.getLink(x);
     backtrack.push_back(link);
   }
-	trace += print(start, link->to->id, backtrack) + "\n";
+  trace += print(start, link->to->id, backtrack) + "\n";
 }
 
-void GraphTravellerDfsPath::startOver(const Graph & g) {
+void GraphTravellerDfsPath::startOver(const Graph &g) {
   // reset visit table, it is the visit bit for edges
   if (m_visit_table) {
     delete m_visit_table;
@@ -199,15 +195,19 @@ void GraphTravellerDfsPath::startOver(const Graph & g) {
   m_visit_table = new BitMap(g.getLinks().size());
 }
 
-string GraphTravellerDfsPath::print(const VERTEX_ID start, const VERTEX_ID end, const LinkList & backtrack) const {
+string GraphTravellerDfsPath::print(const VERTEX_ID start, const VERTEX_ID end,
+                                    const LinkList &backtrack) const {
   string path = backtrack[0]->from->name();
   for (size_t i = 0; i < backtrack.size(); ++i) {
-    path += "--" + backtrack[i]->edge->name() + "-->" + backtrack[i]->to->name();
+    path +=
+        "--" + backtrack[i]->edge->name() + "-->" + backtrack[i]->to->name();
   }
   return path;
 }
 
-size_t GraphTravellerDfsPath::uncoveredBranches(const Graph & g, const VERTEX_ID v, const size_t steps) const {
+size_t GraphTravellerDfsPath::uncoveredBranches(const Graph &g,
+                                                const VERTEX_ID v,
+                                                const size_t steps) const {
   LinkList adj = g.getAdjacencies(v);
 
   size_t uncover = 0;
@@ -225,7 +225,9 @@ size_t GraphTravellerDfsPath::uncoveredBranches(const Graph & g, const VERTEX_ID
   return uncover;
 }
 
-size_t GraphTravellerDfsPath::mostChoice(const Graph & g, const VERTEX_ID v, const size_t steps, LINK_ID & e) const {
+LINK_ID GraphTravellerDfsPath::mostChoice(const Graph &g, const VERTEX_ID v,
+                                          const size_t steps,
+                                          LINK_ID &e) const {
   LinkList adj = g.getAdjacencies(v);
   size_t possibility = 0;
 
@@ -243,10 +245,10 @@ size_t GraphTravellerDfsPath::mostChoice(const Graph & g, const VERTEX_ID v, con
   return possibility;
 }
 
-void GraphTravellerBfs::travel(const Graph & g, string & trace) {
-}
+void GraphTravellerBfs::travel(const Graph &g, string &trace) {}
 
-LinkList * GraphTravellerBfs::shortestPath(const Graph * g, const Vertex * v1, const Vertex * v2) {
+LinkList *GraphTravellerBfs::shortestPath(const Graph *g, const Vertex *v1,
+                                          const Vertex *v2) {
   if (NULL == g || NULL == v1 || NULL == v2) {
     return NULL;
   }
@@ -284,12 +286,12 @@ LinkList * GraphTravellerBfs::shortestPath(const Graph * g, const Vertex * v1, c
     }
   }
   if (!found) {
-    return NULL;  // something wrong?
+    return NULL; // something wrong?
   }
 
-  LinkList * path = new LinkList();
+  LinkList *path = new LinkList();
   // set the path according to the visit trace
-  Link * link = visit_trace[v2->id];
+  Link *link = visit_trace[v2->id];
   while (v1->id != link->from->id && !link->circle()) {
     path->insert(path->begin(), link);
     link = visit_trace[link->from->id];
@@ -299,14 +301,14 @@ LinkList * GraphTravellerBfs::shortestPath(const Graph * g, const Vertex * v1, c
   return path;
 }
 
-void GraphTravellerBfs::startOver(const Graph & g) {
+void GraphTravellerBfs::startOver(const Graph &g) {
   m_nodes = g.size();
   resetVisitBits();
 }
 
 void GraphTravellerBfs::resetVisitBits() {
   m_bits.clear();
-  for (size_t i = 0; i < m_nodes; i++ ) {
+  for (size_t i = 0; i < m_nodes; i++) {
     m_bits.push_back(0);
   }
 }
@@ -344,7 +346,7 @@ bool GraphTravellerBfs::isVisited(const VERTEX_ID v_id) const {
   return ((m_bits[offset] & mask) == mask);
 }
 
-void GraphTravellerBfsAll::configure(const Properties & config) {
+void GraphTravellerBfsAll::configure(const Properties &config) {
   Properties::const_iterator it = config.find("MAX_DEPTH");
   if (it != config.end()) {
     m_max_depth = it->second;
@@ -379,12 +381,12 @@ void GraphTravellerBfsAll::configure(const Properties & config) {
   } else {
     m_random = false;
   }
-
 }
 
-void GraphTravellerBfsAll::travel(const Graph & g, string & trace) {
+void GraphTravellerBfsAll::travel(const Graph &g, string &trace) {
   if (!g.reachable(m_start, m_end)) {
-    cerr << "no connectivity from node " << m_start << " to node " << m_end << endl;
+    cerr << "no connectivity from node " << m_start << " to node " << m_end
+         << endl;
     return;
   }
 
@@ -396,14 +398,16 @@ void GraphTravellerBfsAll::travel(const Graph & g, string & trace) {
   travel(g, m_start);
 }
 
-void GraphTravellerBfsAll::travel(const Graph & g, const VERTEX_ID current_node_id) {
+void GraphTravellerBfsAll::travel(const Graph &g,
+                                  const VERTEX_ID current_node_id) {
   // continue search if not reach the limit
   if (!searchFurther()) {
     return;
   }
 
   // get adjacencies of current node
-  LinkList adj(g.getAdjacencies(current_node_id).begin(), g.getAdjacencies(current_node_id).end());
+  LinkList adj(g.getAdjacencies(current_node_id).begin(),
+               g.getAdjacencies(current_node_id).end());
   if (m_random) {
     random_shuffle(adj.begin(), adj.end());
   }
@@ -448,7 +452,7 @@ void GraphTravellerBfsAll::travel(const Graph & g, const VERTEX_ID current_node_
   }
 }
 
-void GraphTravellerBfsAll::startOver(const Graph & g) {
+void GraphTravellerBfsAll::startOver(const Graph &g) {
   GraphTravellerBfs::startOver(g);
   m_found = 0;
   m_path.clear();
@@ -462,12 +466,13 @@ string GraphTravellerBfsAll::print() const {
   if (m_path.size() % 2 == 0) {
     // there should be odd number of elements in the path
     // something wrong
-    cout << "error there are " << m_path.size() << " elements in the path" << endl;
+    cout << "error there are " << m_path.size() << " elements in the path"
+         << endl;
     return "";
   }
 
   stringstream path;
-  path <<  "S" << m_path[0];
+  path << "S" << m_path[0];
   size_t i = 1;
   while (i < m_path.size()) {
     path << "--E";
@@ -489,45 +494,46 @@ bool GraphTravellerBfsAll::searchFurther() const {
   return (m_found == 0 || (m_path.size() / 2) < m_max_depth);
 }
 
-void GraphTravellerBfsOne::travel(const Graph & g, string & trace) {
+void GraphTravellerBfsOne::travel(const Graph &g, string &trace) {
   if (!g.reachable(m_start, m_end)) {
-    cerr << "no connectivity from node " << m_start << " to node " << m_end << endl;
+    cerr << "no connectivity from node " << m_start << " to node " << m_end
+         << endl;
     return;
   }
 
-	m_backtrack.resize(g.size(), NULL);
-	BitMap visit_table(g.size());
-	queue<VERTEX_ID> q;
-	q.push(m_start);
+  m_backtrack.resize(g.size(), NULL);
+  BitMap visit_table(g.size());
+  queue<VERTEX_ID> q;
+  q.push(m_start);
 
-	bool found = false;
-	while (!q.empty() && !found) {
-		VERTEX_ID v = q.front();
-		q.pop();
+  bool found = false;
+  while (!q.empty() && !found) {
+    VERTEX_ID v = q.front();
+    q.pop();
 
-		LinkList adj(g.getAdjacencies(v).begin(), g.getAdjacencies(v).end());
-		if (m_random)
-			random_shuffle(adj.begin(), adj.end());
+    LinkList adj(g.getAdjacencies(v).begin(), g.getAdjacencies(v).end());
+    if (m_random)
+      random_shuffle(adj.begin(), adj.end());
 
-		visit_table.set(v);
-		for (LinkList::iterator it = adj.begin(); it!= adj.end(); ++it) {
-			VERTEX_ID w = (*it)->to->id;
-			if (m_end == w) { // found, stop searching
-				m_backtrack[w] = *it;
-				found = true;
-				break;
-			}
+    visit_table.set(v);
+    for (LinkList::iterator it = adj.begin(); it != adj.end(); ++it) {
+      VERTEX_ID w = (*it)->to->id;
+      if (m_end == w) { // found, stop searching
+        m_backtrack[w] = *it;
+        found = true;
+        break;
+      }
 
-			if (!visit_table.get(w)) {
-				q.push(w);
-				m_backtrack[w] = *it;
-			}
-		}
-	}
-	trace = print();
+      if (!visit_table.get(w)) {
+        q.push(w);
+        m_backtrack[w] = *it;
+      }
+    }
+  }
+  trace = print();
 }
 
-void GraphTravellerBfsOne::configure(const Properties & config) {
+void GraphTravellerBfsOne::configure(const Properties &config) {
   Properties::const_iterator it = config.find("MAX_DEPTH");
 
   it = config.find("START");
@@ -552,7 +558,7 @@ void GraphTravellerBfsOne::configure(const Properties & config) {
   }
 }
 
-void GraphTravellerBfsOne::startOver(const Graph & g) {
+void GraphTravellerBfsOne::startOver(const Graph &g) {
   m_nodes = g.size();
   resetVisitBits();
   // initialize back track
@@ -561,7 +567,7 @@ void GraphTravellerBfsOne::startOver(const Graph & g) {
 }
 
 string GraphTravellerBfsOne::print() const {
-  Link * link = m_backtrack[m_end];
+  Link *link = m_backtrack[m_end];
   string path;
 
   while (!link->circle() && link->from->id != m_start) {
@@ -569,11 +575,12 @@ string GraphTravellerBfsOne::print() const {
     link = m_backtrack[link->from->id];
   }
 
-  path = link->from->name() + "--" + link->edge->name() + "-->" + link->to->name() + path;
+  path = link->from->name() + "--" + link->edge->name() + "-->" +
+         link->to->name() + path;
   return path;
 }
 
-void GraphTravellerEuler::travel(const Graph & g, string & trace) {
+void GraphTravellerEuler::travel(const Graph &g, string &trace) {
   if (!g.eulerian()) {
     cout << "the graph is not Eulerian graph" << endl;
     return;
@@ -594,7 +601,7 @@ void GraphTravellerEuler::travel(const Graph & g, string & trace) {
   trace = print();
 }
 
-void GraphTravellerEuler::configure(const Properties & config) {
+void GraphTravellerEuler::configure(const Properties &config) {
   Properties::const_iterator it = config.find("START");
   if (it != config.end()) {
     m_start = it->second;
@@ -609,8 +616,8 @@ string GraphTravellerEuler::print() {
   }
 
   // shift start point on top
-  while(m_start != m_euler_cycle.front()->from->id) {
-    Link * link = m_euler_cycle.front();
+  while (m_start != m_euler_cycle.front()->from->id) {
+    Link *link = m_euler_cycle.front();
     m_euler_cycle.erase(m_euler_cycle.begin());
     m_euler_cycle.push_back(link);
   }
@@ -624,7 +631,7 @@ string GraphTravellerEuler::print() {
   return path;
 }
 
-void GraphTravellerEuler::startOver(const Graph & g) {
+void GraphTravellerEuler::startOver(const Graph &g) {
   m_euler_cycle.clear();
   /*
   while (!m_euler_cycle.empty()) {
@@ -635,7 +642,7 @@ void GraphTravellerEuler::startOver(const Graph & g) {
   if (m_visit_table) {
     delete m_visit_table;
   }
-  m_visit_table = new BitMap(g.getLinks().size());  // reset the visit trace
+  m_visit_table = new BitMap(g.getLinks().size()); // reset the visit trace
 
   m_vertices.clear(); // reset the vertices set
   for (size_t i = 0; i < g.size(); ++i) {
@@ -644,7 +651,7 @@ void GraphTravellerEuler::startOver(const Graph & g) {
 }
 
 // find a Euler cycle in graph
-void GraphTravellerEuler::walk(const Graph & g) {
+void GraphTravellerEuler::walk(const Graph &g) {
   // this finction is to find a circuit in directed Eulerian graph
   // based on Hierholzer's algorithm
   // each walk will start from an available vertex,
@@ -664,7 +671,8 @@ void GraphTravellerEuler::walk(const Graph & g) {
   }
 
   VERTEX_ID v = m_start;
-  if (!m_euler_cycle.empty()) { // if there is previous cycle, use the last vertex as the new start point
+  if (!m_euler_cycle.empty()) { // if there is previous cycle, use the last
+                                // vertex as the new start point
     v = m_euler_cycle.back()->to->id;
   }
 
@@ -674,19 +682,20 @@ void GraphTravellerEuler::walk(const Graph & g) {
   while (m_vertices[v].out_degree > 0 && !found) {
     if (m_vertices[v].out_degree == 0) {
       cout << "can't go further from " << v << endl;
-      throw std::logic_error("Euler walk terminated at " + m_vertices[v].name());
+      throw std::logic_error("Euler walk terminated at " +
+                             m_vertices[v].name());
     }
 
     LinkList adj = g.getAdjacencies(v);
     for (LinkList::iterator it = adj.begin(); it != adj.end(); ++it) {
       if (m_visit_table->get((*it)->edge->id)) {
-        continue;  // if the edge was visited, skip
+        continue; // if the edge was visited, skip
       }
 
       // found an available out edge
-      m_euler_cycle.push_back(*it); // added in the trail
+      m_euler_cycle.push_back(*it);        // added in the trail
       m_visit_table->set((*it)->edge->id); // mark the edge as visited
-      m_vertices[v].out_degree--; // reduce the out degree of v
+      m_vertices[v].out_degree--;          // reduce the out degree of v
       v = (*it)->to->id;
       m_vertices[v].in_degree--; // and the in degree of next vertex
 
@@ -699,8 +708,8 @@ void GraphTravellerEuler::walk(const Graph & g) {
 }
 
 // get the vertex in the path which has out going link
-// this function also shifts the cycle to keep the available vertex at the rear of the path
-// in order to start a new circle
+// this function also shifts the cycle to keep the available vertex at the rear
+// of the path in order to start a new circle
 VERTEX_ID GraphTravellerEuler::freeVertex() {
   if (m_euler_cycle.empty()) {
     throw std::logic_error("euler cycle is empty");
@@ -713,14 +722,13 @@ VERTEX_ID GraphTravellerEuler::freeVertex() {
 
   // turn the circle around until the rear vertex has uncovered edge
   // i.e. the last link->to->out_degree > 0
-  // while went through all the vertices in the path but didn't found any uncovered edge
-  // i.e. all vertex->out_degree == 0
-  // stop the loop
-  // use a counter to record how many steps has been taken
+  // while went through all the vertices in the path but didn't found any
+  // uncovered edge i.e. all vertex->out_degree == 0 stop the loop use a counter
+  // to record how many steps has been taken
   size_t steps = 0;
-  Link * link = m_euler_cycle.back();
-  while ((m_vertices[link->to->id].out_degree == 0)
-         && (steps < m_euler_cycle.size())) {
+  Link *link = m_euler_cycle.back();
+  while ((m_vertices[link->to->id].out_degree == 0) &&
+         (steps < m_euler_cycle.size())) {
     link = m_euler_cycle.front();
     // each vertex in the cycle should have equal in and out degree
     if (m_vertices[link->from->id].balance() != 0) {

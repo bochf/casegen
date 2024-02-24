@@ -1,7 +1,7 @@
-#ifndef __BITMAP_H__
-#define __BITMAP_H__
+#ifndef CASEGEN_BITMAP_H_
+#define CASEGEN_BITMAP_H_
 
-#define MARKER_BLOCK_BITS 8
+const int MARKER_BLOCK_BITS = 8;
 
 #include <cstring>
 #include <iostream>
@@ -99,7 +99,7 @@ public:
   virtual bool all1() const {
     unsigned char c = 0xff;
     for (size_t i = 0; i < offset(m_size); ++i) {
-      if (m_bits[i] ^ 0xff) {
+      if ((m_bits[i] ^ 0xff) != 0) {
         return false;
       }
     }
@@ -108,7 +108,7 @@ public:
     if (bits(m_size) != 0) {
       for (size_t i = bits(m_size); i > 0; --i) {
         c = (m_bits[m_table_len - 1] >> (i - 1)) & 1;
-        if (c ^ 1) {
+        if ((c ^ 1) != 0) {
           return false;
         }
       }
@@ -129,7 +129,7 @@ public:
       return false;
     }
     for (size_t i = 0; i < m_table_len; ++i) {
-      if (m_bits[i] ^ bm.m_bits[i]) {
+      if ((m_bits[i] ^ bm.m_bits[i]) != 0) {
         return false;
       }
     }
@@ -152,10 +152,11 @@ public:
 
   bool operator>=(const BitMap &bm) const {
     if (m_size >= bm.m_size && m_table_len >= bm.m_table_len) {
-      for (size_t i = 0; i < bm.m_table_len; ++i)
-        if (m_bits[i] ^ (m_bits[i] | bm.m_bits[i])) {
+      for (size_t i = 0; i < bm.m_table_len; ++i) {
+        if ((m_bits[i] ^ (m_bits[i] | bm.m_bits[i])) != 0) {
           return false;
         }
+      }
       return true;
     }
     return false;
@@ -166,6 +167,7 @@ public:
         if (bm.m_bits[i] ^ (m_bits[i] | bm.m_bits[i])) {
           return false;
         }
+      }
       return true;
     }
     return false;
@@ -174,15 +176,16 @@ public:
   // 2 bit maps AND
   BitMap &operator&(const BitMap &bm) const {
     BitMap *value = new BitMap(m_size);
-    size_t  i     = 0;
-    while (i < m_table_len && i < bm.m_table_len) {
-      value->m_bits[i] = m_bits[i] & bm.m_bits[i];
+    size_t i = 0;
+    while (i < m_table_len && i < rhs.m_table_len) {
+      value->m_bits[i] = m_bits[i] & rhs.m_bits[i];
       ++i;
     }
-    if (m_table_len > bm.m_table_len)
+    if (m_table_len > rhs.m_table_len) {
       while (i++ < m_table_len) {
-        value->m_bits[i] = m_bits[i] & bm.m_bits[i];
+        value->m_bits[i] = m_bits[i] & rhs.m_bits[i];
       }
+    }
 
     return *value;
   };
@@ -198,15 +201,16 @@ public:
   // 2 bit maps OR
   BitMap &operator|(const BitMap &bm) const {
     BitMap *value = new BitMap(m_size);
-    size_t  i     = 0;
+    size_t i = 0;
     while (i < m_table_len && i < bm.m_table_len) {
       value->m_bits[i] = m_bits[i] | bm.m_bits[i];
       ++i;
     }
-    if (m_table_len > bm.m_table_len)
+    if (m_table_len > bm.m_table_len) {
       while (i++ < m_table_len) {
         value->m_bits[i] = m_bits[i] | bm.m_bits[i];
       }
+    }
 
     return *value;
   }
@@ -221,15 +225,16 @@ public:
   // 2 bit maps XOR
   BitMap &operator^(const BitMap &bm) const {
     BitMap *value = new BitMap(m_size);
-    size_t  i     = 0;
+    size_t i = 0;
     while (i < m_table_len && i < bm.m_table_len) {
       value->m_bits[i] = m_bits[i] ^ bm.m_bits[i];
       ++i;
     }
-    if (m_table_len > bm.m_table_len)
+    if (m_table_len > bm.m_table_len) {
       while (i++ < m_table_len) {
         value->m_bits[i] = m_bits[i] ^ bm.m_bits[i];
       }
+    }
 
     return *value;
   };
@@ -248,7 +253,7 @@ public:
     }
 
     diff.clear();
-    BitMap bm_diff = *this ^ bm;
+    const auto bm_diff = *this ^ bm;
     for (size_t i = 0; i < m_table_len; ++i) {
       unsigned char c = bm_diff.m_bits[i];
       for (size_t j = 0; j < MARKER_BLOCK_BITS; ++j) {
@@ -267,13 +272,13 @@ private:
       delete[] m_bits;
     }
     m_bits = new unsigned char[m_table_len];
-    memcpy(m_bits, bm.m_bits, m_table_len);
+    memcpy(m_bits, rhs.m_bits, m_table_len);
     return *this;
   };
 
   BitMap();
-  size_t         m_size;
-  size_t         m_table_len;
+  size_t m_size;
+  size_t m_table_len;
   unsigned char *m_bits;
 
   friend class BitMap2;
@@ -318,7 +323,7 @@ public:
       if (i < m_row && j < m_col) {
         return m_bitmap->get(i * m_col + j);
     }
-      return false;
+    return false;
   };
   virtual const BitMap &operator[](const size_t row) const {
     return get_row(row);
@@ -441,7 +446,7 @@ private:
     // get one line from a 2 dimention bit map
     // tricky here is the bits saved in the 2D bit map is not row aligned
     // so we need to get the value bit by bit
-    size_t start_bit   = row * m_col;
+    size_t start_bit = row * m_col;
     size_t start_block = BitMap::offset(start_bit);
     size_t moving_bits = BitMap::bits(start_bit);
 
@@ -463,7 +468,7 @@ private:
       }
       // deal the last block
       unsigned char c = m_bitmap->m_bits[start_block + 1];
-      c               = c >> (MARKER_BLOCK_BITS - moving_bits);
+      c = c >> (MARKER_BLOCK_BITS - moving_bits);
       bm->m_bits[i] |= c;
     }
 
@@ -471,8 +476,8 @@ private:
   };
 
   BitMap2();
-  size_t  m_row;
-  size_t  m_col;
+  size_t m_row;
+  size_t m_col;
   BitMap *m_bitmap;
 };
 

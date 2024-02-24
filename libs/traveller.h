@@ -1,11 +1,14 @@
-#ifndef __TRAVELLER_H__
-#define __TRAVELLER_H__
+#ifndef CASEGEN_TRAVELLER_H_
+#define CASEGEN_TRAVELLER_H_
 
 #include "graph.h"
-#include <climits>
-#include <queue>
 
-typedef map<string, int> Properties;
+#include <climits>
+#include <memory>
+#include <queue>
+#include <string>
+
+typedef std::map<std::string, int> Properties;
 
 // graph traveller
 class IGraphTraveller {
@@ -40,27 +43,25 @@ protected:
 
 // breadth first search
 class GraphTravellerBfs : public IGraphTraveller {
-  friend class IGraphTraveller;
-
 public:
-  virtual void travel(const Graph &g, string &trace);
-  virtual void configure(const Properties &config){};
-
-  inline virtual GT_ALGORITHM algorithm() { return GT_BFS; };
-
-  static LinkList *
-  shortestPath(const Graph *g, const Vertex *v1, const Vertex *v2);
-
-protected:
   GraphTravellerBfs() : m_nodes(0), m_random(false){};
 
+  virtual void travel(const Graph &g, string &trace) override;
+  virtual void configure(const Properties &config) override{};
+
+  virtual GT_ALGORITHM algorithm() override { return GT_BFS; };
+
+  static LinkList *shortestPath(const Graph *g, const Vertex *v1,
+                                const Vertex *v2);
+
+protected:
   virtual void resetVisitBits();
   virtual void startOver(const Graph &g);
   virtual void visit(const VERTEX_ID v_id, const bool mark = true);
   virtual bool isVisited(const VERTEX_ID v_id) const;
 
-  size_t       m_nodes;
-  bool         m_random;
+  size_t m_nodes;
+  bool m_random;
   vector<char> m_bits;
 };
 
@@ -73,16 +74,13 @@ public:
   inline virtual GT_ALGORITHM algorithm() { return GT_DFS; };
 
 protected:
-  GraphTravellerDfs() : m_visit_table(NULL){};
-
-  virtual void   startOver(const Graph &g);
-  virtual void   visit(const VERTEX_ID v_id, const bool mark = true);
-  virtual bool   isVisited(const VERTEX_ID v_id) const;
-  virtual string print(const VERTEX_ID start,
-                       const VERTEX_ID end,
+  virtual void startOver(const Graph &g);
+  virtual void visit(const VERTEX_ID v_id, const bool mark = true);
+  virtual bool isVisited(const VERTEX_ID v_id) const;
+  virtual string print(const VERTEX_ID start, const VERTEX_ID end,
                        const LinkList &backtrack) const;
 
-  BitMap *m_visit_table;
+  BitMap *m_visit_table = nullptr;
 
   friend class IGraphTraveller;
 };
@@ -96,25 +94,19 @@ public:
   inline virtual GT_ALGORITHM algorithm() { return GT_DFS_PATH; };
 
 protected:
-  GraphTravellerDfsPath(){};
-
-  virtual void   startOver(const Graph &g);
-  virtual string print(const VERTEX_ID start,
-                       const VERTEX_ID end,
+  virtual void startOver(const Graph &g);
+  virtual string print(const VERTEX_ID start, const VERTEX_ID end,
                        const LinkList &backtrack) const;
 
 private:
   void travel(const Graph &g, const LINK_ID v, string &trace);
   // calculate the uncovered out path of a vertex
-  size_t uncoveredBranches(const Graph    &g,
-                           const VERTEX_ID v,
-                           const size_t    steps) const;
+  size_t uncoveredBranches(const Graph &g, const VERTEX_ID v,
+                           const size_t steps) const;
   // get the new edge which has most possibility to walk on new path
   // by calculating the uncovered branches of its children
-  LINK_ID mostChoice(const Graph    &g,
-                     const VERTEX_ID v,
-                     const size_t    steps,
-                     LINK_ID        &e) const;
+  LINK_ID mostChoice(const Graph &g, const VERTEX_ID v, const size_t steps,
+                     LINK_ID &e) const;
   friend class IGraphTraveller;
 };
 
@@ -123,20 +115,20 @@ class GraphTravellerBfsAll : public GraphTravellerBfs {
   friend class IGraphTraveller;
 
 public:
-  virtual void travel(const Graph &g, string &trace);
-
-  virtual void                configure(const Properties &config);
-  inline virtual GT_ALGORITHM algorithm() { return GT_BFS_ALL; };
-
-protected:
-  virtual void   startOver(const Graph &g);
-  virtual string print() const;
-
-  virtual bool searchFurther() const;
-
   GraphTravellerBfsAll()
       : m_start(0), m_end(0), m_found(0), m_max_cases(UINT_MAX),
         m_max_depth(UINT_MAX){};
+
+  void travel(const Graph &g, string &trace) final;
+
+  void configure(const Properties &config) final;
+  GT_ALGORITHM algorithm() final { return GT_BFS_ALL; };
+
+protected:
+  virtual void startOver(const Graph &g);
+  virtual string print() const;
+
+  virtual bool searchFurther() const;
 
   vector<ELEMENT_ID> m_path;
 
@@ -160,11 +152,11 @@ public:
   inline virtual GT_ALGORITHM algorithm() { return GT_BFS_ONE; };
 
 protected:
-  virtual void   startOver(const Graph &g);
+  virtual void startOver(const Graph &g);
   virtual string print() const;
 
   VERTEX_ID m_start, m_end;
-  LinkList  m_backtrack;
+  LinkList m_backtrack;
 };
 
 class GraphTravellerEuler : public IGraphTraveller {
@@ -186,6 +178,7 @@ class GraphTravellerEuler : public IGraphTraveller {
    * this way to the previous tour.
    */
 public:
+  GraphTravellerEuler() : m_start(0), m_random(true), m_visit_table(NULL){};
   virtual ~GraphTravellerEuler() {
     if (m_visit_table) {
       delete m_visit_table;
@@ -202,19 +195,17 @@ public:
   inline virtual GT_ALGORITHM algorithm() { return GT_EULER; };
 
 protected:
-  GraphTravellerEuler() : m_start(0), m_random(true), m_visit_table(NULL){};
-
   virtual string print();
 
 private:
-  void      startOver(const Graph &g);
-  void      walk(const Graph &g);
+  void startOver(const Graph &g);
+  void walk(const Graph &g);
   VERTEX_ID freeVertex();
 
-  BitMap        *m_visit_table;
-  bool           m_random;
-  VERTEX_ID      m_start;
-  LinkList       m_euler_cycle;
+  BitMap *m_visit_table;
+  bool m_random;
+  VERTEX_ID m_start;
+  LinkList m_euler_cycle;
   vector<Vertex> m_vertices;
 
   friend class IGraphTraveller;
