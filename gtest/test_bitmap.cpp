@@ -1,11 +1,12 @@
-#include <iostream>
+#include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 #include <bitmap.h>
 #include <gtest/gtest.h>
 
 TEST(BitMap, create) {
-  BitMap bitmap(10);
+  BitMap const bitmap(10);
 
   EXPECT_EQ(10, bitmap.size());
   EXPECT_TRUE(bitmap.all0());
@@ -126,7 +127,6 @@ TEST(BitMap, manipulate) {
   bm1 ^= bm2;
   EXPECT_TRUE(bm1.get(20));
   EXPECT_FALSE(bm1.get(10));
-
 }
 
 TEST(BitMap, manipulate_different_size) {

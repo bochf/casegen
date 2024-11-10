@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 
     if (string("--random") == argv[i]) {
       random = 1;
-      srand((unsigned int)time(NULL));
+      srand((unsigned int)time(nullptr));
       continue;
     }
 
@@ -140,7 +140,7 @@ g->dump();
 }
 
 Graph g;
-g.init(strConfigFileName);
+g.loadFromFile(strConfigFileName);
 if (!g.good()) {
 cerr << "invalid input " << strConfigFileName << endl;
 return -1;
@@ -176,32 +176,32 @@ return 0;
       return -1;
     }
   } else {
-    if (stateMachine.load(strConfigFileName) == nullptr) {
-      return -1;
-    }
+    stateMachine.load(strConfigFileName);
   }
 
   vector<VERTEX_ID> start_points;
   vector<VERTEX_ID> end_points;
   if (start == "any") {
-    for (size_t i = 0; i < stateMachine.size(); ++i)
+    for (size_t i = 0; i < stateMachine.size(); ++i) {
       start_points.push_back(i);
+    }
   } else {
     start_points.push_back(atoi(start.c_str()));
   }
   if (end == "any") {
-    for (size_t i = 0; i < stateMachine.size(); ++i)
+    for (size_t i = 0; i < stateMachine.size(); ++i) {
       end_points.push_back(i);
+    }
   } else {
     end_points.push_back(atoi(end.c_str()));
   }
 
-  for (size_t i = 0; i < start_points.size(); ++i)
+  for (size_t i = 0; i < start_points.size(); ++i) {
     for (size_t j = 0; j < end_points.size(); ++j) {
       config["START"] = start_points[i];
       config["END"]   = end_points[j];
       stateMachine.configure(config);
-      cout << stateMachine.cases() << endl;
+      cout << stateMachine.cases() << "\n";
     }
   }
   return 0;

@@ -4,7 +4,9 @@
 #include <iostream>
 #include <queue>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "bitmap.h"
 #include "graph.h"
@@ -12,14 +14,15 @@
 
 using namespace std;
 
-Graph::Graph() : m_reach_table(NULL) {}
+Graph::Graph() : m_reach_table(nullptr) {}
 
 Graph::~Graph() {
-  for (VERTEX_ID i = 0; i < size(); i++)
+  for (VERTEX_ID i = 0; i < size(); i++) {
     for (LINK_ID j = 0; j < m_net[i].size(); ++j) {
       delete m_net[i][j];
       m_net[i].clear();
     }
+  }
   m_net.clear();
 
   if (m_reach_table) {
@@ -27,7 +30,7 @@ Graph::~Graph() {
   }
 }
 
-void Graph::init(const string matrix_file) {
+void Graph::loadFromFile(const string matrix_file) {
   m_vertices.clear();
   m_links.clear();
   m_edge_types.clear();
@@ -35,7 +38,7 @@ void Graph::init(const string matrix_file) {
   if (m_reach_table) {
     delete m_reach_table;
   }
-  m_reach_table = NULL;
+  m_reach_table = nullptr;
 
   // read vertex-edge adjacency file
   // it must be m*n matrix, each element is the vertex id
@@ -44,7 +47,7 @@ void Graph::init(const string matrix_file) {
   // -1 means no connection
   ifstream mf(matrix_file.c_str());
   if (!mf.good()) {
-    cerr << "open file " << matrix_file << " error" << endl;
+    cerr << "open file " << matrix_file << " error" << '\n';
     return;
   }
 
@@ -79,7 +82,7 @@ void Graph::init(const string matrix_file) {
       // matrix does not have same columns in each line
       cerr << "asymmetric matrix, line " << i - 1 << " has "
            << m_edge_types.size() << " columns, but line " << i << " has "
-           << type << " columns" << endl;
+           << type << " columns" << '\n';
       mf.close();
       return;
     }
@@ -93,73 +96,72 @@ void Graph::init(const string matrix_file) {
 
 void Graph::dump() {
   if (!m_vertices.empty()) {
-    cout << "Vertices: " << m_vertices.size() << endl;
+    cout << "Vertices: " << m_vertices.size() << '\n';
     for (size_t i = 0; i < m_vertices.size(); ++i) {
       cout << " " << m_vertices[i]->name() << " in=" << m_vertices[i]->in_degree
            << " out=" << m_vertices[i]->out_degree;
     }
-    cout << endl;
+    cout << '\n';
   }
 
   if (!m_edge_types.empty()) {
-    cout << "EdgeTypes: " << m_edge_types.size() << endl;
+    cout << "EdgeTypes: " << m_edge_types.size() << '\n';
     for (size_t i = 0; i < m_edge_types.size(); ++i) {
       cout << " " << m_edge_types[i]->name();
     }
-    cout << endl;
+    cout << '\n';
   }
 
   if (!m_links.empty()) {
-    cout << "Links: " << m_links.size() << endl;
+    cout << "Links: " << m_links.size() << '\n';
     for (size_t i = 0; i < m_links.size(); ++i) {
       cout << " (" << m_links[i]->from->name() << ", "
            << m_links[i]->edge->name() << ", " << m_links[i]->to->name() << ", "
            << m_links[i]->balance() << ")";
     }
-    cout << endl;
+    cout << '\n';
   }
 
   if (!m_net.empty()) {
-    cout << "Adjacencies:" << m_links.size() << endl;
+    cout << "Adjacencies:" << m_links.size() << '\n';
     for (size_t m = 0; m < m_net.size(); ++m) {
       for (size_t i = 0; i < m_net[m].size(); ++i) {
         cout << " " << m_net[m][i]->from->name() << "--"
              << m_net[m][i]->edge->name() << "-->" << m_net[m][i]->to->name();
       }
-      cout << endl;
+      cout << '\n';
     }
-    cout << endl;
+    cout << '\n';
   }
 
   // print arrow vertices, fork vertices and bridge links
-  cout << "Balanced vertices:" << m_equals.size() << endl;
+  cout << "Balanced vertices:" << m_equals.size() << '\n';
   for (VertexList::iterator it = m_equals.begin(); it != m_equals.end(); ++it) {
     cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", "
          << (*it)->out_degree << ")";
   }
-  cout << endl;
-  cout << "Arrow vertices:" << m_arrows.size() << endl;
-  for (VertexList::iterator it = m_arrows.begin(); it != m_arrows.end(); ++it) {
-    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", "
-         << (*it)->out_degree << ")";
+  cout << '\n';
+  cout << "Arrow vertices:" << m_arrows.size() << '\n';
+  for (auto const &vertex : m_arrows) {
+    cout << " (" << vertex->name() << ", " << vertex->in_degree << ", "
+         << vertex->out_degree << ")";
   }
-  cout << endl;
-  cout << "Fork vertices:" << m_forks.size() << endl;
-  for (VertexList::iterator it = m_forks.begin(); it != m_forks.end(); ++it) {
-    cout << " (" << (*it)->name() << ", " << (*it)->in_degree << ", "
-         << (*it)->out_degree << ")";
+  cout << '\n';
+  cout << "Fork vertices:" << m_forks.size() << '\n';
+  for (auto const &vertex : m_forks) {
+    cout << " (" << vertex->name() << ", " << vertex->in_degree << ", "
+         << vertex->out_degree << ")";
   }
-  cout << endl;
+  cout << '\n';
 }
 
-Link *Graph::link(const VERTEX_ID v1, const VERTEX_ID v2,
-                  const EDGE_TYPE type) {
+Link *Graph::link(VERTEX_ID source, VERTEX_ID target, EDGE_TYPE type) {
   if (m_edge_types.size() == type) {
     m_edge_types.push_back(new GraphElement(type, ""));
   }
 
-  if (v1 >= size() || v2 >= size()) {
-    return NULL;
+  if (source >= size() || target >= size()) {
+    return nullptr;
   }
 
   /*
@@ -171,11 +173,11 @@ Link *Graph::link(const VERTEX_ID v1, const VERTEX_ID v2,
   */
 
   Edge *edge = new Edge(m_links.size(), "", type);
-  Link *link = new Link(m_vertices[v1], m_vertices[v2], edge);
+  Link *link = new Link(m_vertices[source], m_vertices[target], edge);
   m_links.push_back(link);
-  m_net[v1].push_back(link);
-  m_vertices[v1]->out_degree++;
-  m_vertices[v2]->in_degree++;
+  m_net[source].push_back(link);
+  m_vertices[source]->out_degree++;
+  m_vertices[target]->in_degree++;
   return link;
   // m_net[v1].push_back(m_links.back());
 }
@@ -186,12 +188,13 @@ const bool Graph::good() const {
   }
 
   for (VERTEX_ID i = 0; i < m_vertices.size(); ++i) {
-    for (size_t j = 0; j < m_net[i].size(); ++j)
+    for (size_t j = 0; j < m_net[i].size(); ++j) {
       if (m_net[i][j]->edge->type >= m_edge_types.size() ||
           m_net[i][j]->from->id >= m_vertices.size() ||
           m_net[i][j]->to->id >= m_vertices.size()) {
         return false;
       }
+    }
   }
 
   return true;
@@ -208,22 +211,22 @@ void Graph::eulerize() {
     divide();
 
     bridges.clear();
-    for (VertexList::const_iterator arrow = m_arrows.begin();
-         arrow != m_arrows.end(); ++arrow)
-      for (VertexList::const_iterator fork = m_forks.begin();
-           fork != m_forks.end(); ++fork) {
-        LinkList *bridge = GraphTravellerBfs::shortestPath(this, *arrow, *fork);
+    for (auto const &arrow : m_arrows) {
+      for (auto const &fork : m_forks) {
+        LinkList *bridge =
+            GraphTravellerBfs::shortestPath(*this, *arrow, *fork);
         if (bridge) {
           bridges.push_back(bridge);
         }
       }
+    }
 
     std::sort(bridges.begin(), bridges.end(), Graph::compareByLength);
     for (vector<LinkList *>::const_iterator bridge = bridges.begin();
          bridge != bridges.end(); ++bridge) {
       Link *left = (*bridge)->front();
       Link *right = (*bridge)->back();
-      while (left->from->balance() > 0 && right->to->balance() < 0) {
+      while (left->source->balance() > 0 && right->target->balance() < 0) {
         clonePath(**bridge);
       }
     }
@@ -258,12 +261,12 @@ void Graph::scan() {
     // m_reach_table->set(v, v);
 
     while (!q.empty()) {
-      VERTEX_ID w = q.front();
+      VERTEX_ID const w = q.front();
       q.pop();
 
       for (LinkList::iterator it = m_net[w].begin(); it != m_net[w].end();
            ++it) {
-        VERTEX_ID x = (*it)->to->id;
+        VERTEX_ID const x = (*it)->to->id;
         if (visit_table->get(x) == 1) {
           continue;
         }
@@ -296,11 +299,12 @@ void Graph::divide() {
 
 bool Graph::eulerian() const {
   bool balance = true;
-  for (size_t v = 0; v < m_vertices.size(); ++v)
+  for (size_t v = 0; v < m_vertices.size(); ++v) {
     if (m_vertices[v]->balance() != 0) {
       balance = false;
       break;
     }
+  }
 
   return balance;
 }

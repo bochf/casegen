@@ -23,11 +23,11 @@ public:
 
   void configure(const Properties &config);
 
-  size_t size() const { return m_StateEvent.size(); };
+  size_t size() const { return m_stateGraph.size(); };
 
 private:
   Graph *generate(size_t rows, size_t cols, size_t *states[]);
-  Graph m_StateEvent;
+  Graph m_stateGraph;
   std::shared_ptr<IGraphTraveller> m_pTrasition = nullptr;
 };
 

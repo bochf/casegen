@@ -22,21 +22,23 @@ public:
     GT_EULER
   };
 
-  IGraphTraveller()          = default;
+  IGraphTraveller() = default;
   virtual ~IGraphTraveller() = default;
 
   // disable copy, assignment and move constructors
-  IGraphTraveller(const IGraphTraveller &rhs)            = delete;
+  IGraphTraveller(const IGraphTraveller &rhs) = delete;
   IGraphTraveller &operator=(const IGraphTraveller &rhs) = delete;
-  IGraphTraveller(const IGraphTraveller &&rhs)           = delete;
+  IGraphTraveller(const IGraphTraveller &&rhs) = delete;
+  IGraphTraveller &operator=(IGraphTraveller &&rhs) = delete;
 
   // interfaces
-  virtual void            travel(const Graph &g, string &trace) = 0;
-  virtual void            configure(const Properties &config)   = 0;
-  virtual GT_ALGORITHM    algorithm()                           = 0;
+  virtual void travel(const Graph &g, string &trace) = 0;
+  virtual void configure(const Properties &config) = 0;
+  virtual GT_ALGORITHM algorithm() = 0;
 
   // factory
-  static IGraphTraveller *createInstance(const GT_ALGORITHM &algorithm);
+  static std::shared_ptr<IGraphTraveller>
+  createInstance(GT_ALGORITHM algorithm);
 
 protected:
 };
@@ -46,13 +48,13 @@ class GraphTravellerBfs : public IGraphTraveller {
 public:
   GraphTravellerBfs() : m_nodes(0), m_random(false){};
 
-  virtual void travel(const Graph &g, string &trace) override;
-  virtual void configure(const Properties &config) override{};
+  void travel(const Graph &g, string &trace) override;
+  void configure(const Properties &config) override{};
 
-  virtual GT_ALGORITHM algorithm() override { return GT_BFS; };
+  GT_ALGORITHM algorithm() override { return GT_BFS; };
 
-  static LinkList *shortestPath(const Graph *g, const Vertex *v1,
-                                const Vertex *v2);
+  static LinkList shortestPath(const Graph &graph, const Vertex &from,
+                               const Vertex &to);
 
 protected:
   virtual void resetVisitBits();
@@ -125,7 +127,7 @@ public:
   GT_ALGORITHM algorithm() final { return GT_BFS_ALL; };
 
 protected:
-  virtual void startOver(const Graph &g);
+  void startOver(const Graph &g) override;
   virtual string print() const;
 
   virtual bool searchFurther() const;
@@ -139,15 +141,15 @@ protected:
   size_t m_max_cases;
 
 private:
-  void travel(const Graph &g, const VERTEX_ID current_node_id);
+  void explore(const Graph &graph, VERTEX_ID current_node_id);
 };
 
 class GraphTravellerBfsOne : public GraphTravellerBfs {
   friend class IGraphTraveller;
 
 public:
-  virtual void travel(const Graph &g, string &trace);
-  virtual void configure(const Properties &config);
+  void travel(const Graph &g, string &trace) override;
+  void configure(const Properties &config) override;
 
   inline virtual GT_ALGORITHM algorithm() { return GT_BFS_ONE; };
 
@@ -178,12 +180,12 @@ class GraphTravellerEuler : public IGraphTraveller {
    * this way to the previous tour.
    */
 public:
-  GraphTravellerEuler() : m_start(0), m_random(true), m_visit_table(NULL){};
+  GraphTravellerEuler() : m_start(0), m_random(true), m_visit_table(nullptr){};
   virtual ~GraphTravellerEuler() {
     if (m_visit_table) {
       delete m_visit_table;
     }
-    m_visit_table = NULL;
+    m_visit_table = nullptr;
     m_euler_cycle.clear();
     // while (!m_euler_cycle.empty()) m_euler_cycle.pop();
     m_vertices.clear();

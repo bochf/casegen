@@ -14,7 +14,7 @@ using namespace std;
 
 template <class _T> class Matrix {
 public:
-  Matrix() : m_buf(NULL), m_rows(0), m_cols(0){};
+  Matrix() : m_buf(nullptr), m_rows(0), m_cols(0){};
   Matrix(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols) {
     m_buf = new _T *[rows];
     for (size_t i = 0; i < rows; ++i) {

@@ -12,12 +12,12 @@
 
 Graph *StateMachine::generate(const size_t rows, const size_t cols,
                               size_t *states[]) {
-  if (rows == 0 || cols == 0 || states == NULL) {
-    return NULL;
+  if (rows == 0 || cols == 0 || states == nullptr) {
+    return nullptr;
   }
 
   vector<BitMap *> states_attr;
-  m_StateEvent.init(rows, cols);
+  m_stateGraph.init(rows);
 
   // create all states
   bool error = false;
@@ -43,7 +43,7 @@ Graph *StateMachine::generate(const size_t rows, const size_t cols,
       delete states_attr[i];
     }
     states_attr.clear();
-    return NULL;
+    return nullptr;
   }
 
   // detect possible connections
@@ -64,22 +64,22 @@ Graph *StateMachine::generate(const size_t rows, const size_t cols,
         EDGE_TYPE edge_type =
             attr_diff[0] +
             static_cast<size_t>(states_attr[i]->get(attr_diff[0])) * cols;
-        m_StateEvent.link(i, j, edge_type);
+        m_stateGraph.link(i, j, edge_type);
         cout << "add link " << i << ", " << j << '\n';
       }
     }
   }
 
-  m_StateEvent.scan();
+  m_stateGraph.scan();
 
-  return &m_StateEvent;
+  return &m_stateGraph;
 }
 
 Graph *StateMachine::generate(const string &state_file) {
   ifstream fs(state_file.c_str());
   if (!fs.good()) {
     cerr << "open file " << state_file << " error" << '\n';
-    return NULL;
+    return nullptr;
   }
 
   Matrix<size_t> matrix;
@@ -92,21 +92,21 @@ Graph *StateMachine::generate(const string &state_file) {
 }
 
 void StateMachine::load(const string &matrix_file) {
-  m_StateEvent.init(matrix_file);
+  m_stateGraph.loadFromFile(matrix_file);
 }
 
 string StateMachine::cases() {
-  if (NULL == m_pTrasition) {
+  if (nullptr == m_pTrasition) {
     return "";
   }
 
   if (m_pTrasition->algorithm() == IGraphTraveller::GT_EULER &&
-      !m_StateEvent.eulerian()) {
-    m_StateEvent.eulerize();
+      !m_stateGraph.eulerian()) {
+    m_stateGraph.eulerize();
   }
 
   string trace;
-  m_pTrasition->travel(m_StateEvent, trace);
+  m_pTrasition->travel(m_stateGraph, trace);
   return trace;
   // return m_pTrasition->print();
 }
@@ -121,7 +121,7 @@ void StateMachine::configure(const Properties &config) {
   if ((m_pTrasition != nullptr) && m_pTrasition->algorithm() != algorithm) {
     m_pTrasition = nullptr;
   }
-  if (NULL == m_pTrasition) {
+  if (nullptr == m_pTrasition) {
     m_pTrasition = IGraphTraveller::createInstance(algorithm);
   }
 

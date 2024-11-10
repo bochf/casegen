@@ -2,13 +2,12 @@
 #define CASEGEN_GRAPH_H
 
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "bitmap.h"
-
-using namespace std;
 
 #define ELEMENT_ID int
 #define VERTEX_ID ELEMENT_ID
@@ -18,54 +17,45 @@ using namespace std;
 // simple graph element
 struct GraphElement {
   ELEMENT_ID id{0};
-  string content;
+  std::string content;
 
-  GraphElement(){};
-  GraphElement(const ELEMENT_ID _id, const string &_content)
+  GraphElement(ELEMENT_ID _id, const std::string &_content)
       : id(_id), content(_content){};
-  GraphElement(const GraphElement &rhs) : id(rhs.id), content(rhs.content){};
-  virtual ~GraphElement(){};
 
-  virtual string name() { return content; };
+  virtual std::string name() { return content; };
 };
 
 // graph vertex
 struct Vertex : public GraphElement {
-  size_t in_degree{0};
-  size_t out_degree{0};
+  int in_degree{0};
+  int out_degree{0};
 
   Vertex(const ELEMENT_ID _id, const string &_content)
       : GraphElement(_id, _content){};
 
-  Vertex(const Vertex &rhs)
-      : GraphElement(rhs.id, rhs.content), in_degree(rhs.in_degree),
-        out_degree(rhs.out_degree){
-
-        };
-
-  virtual string name() {
+  std::string name() override {
     if (content.empty()) {
-      stringstream ss;
-      ss << "S" << id;
-      content = ss.str();
+      std::stringstream oss;
+      oss << "S" << id;
+      content = oss.str();
     }
     return content;
   };
 
-  inline int balance() const { return in_degree - out_degree; };
+  int balance() const { return in_degree - out_degree; };
 };
 
 struct Edge : public GraphElement {
   EDGE_TYPE type;
 
-  Edge(const ELEMENT_ID _id, const string _content, const EDGE_TYPE _type)
+  Edge(ELEMENT_ID _id, const std::string &_content, EDGE_TYPE _type)
       : GraphElement(_id, _content), type(_type){};
 
-  virtual string name() {
+  std::string name() override {
     if (content.empty()) {
-      stringstream ss;
-      ss << "E" << type;
-      content = ss.str();
+      std::stringstream oss;
+      oss << "E" << type;
+      content = oss.str();
     }
     return content;
   };
@@ -73,27 +63,23 @@ struct Edge : public GraphElement {
 
 // tuple for link
 struct Link {
-  Vertex *from;
-  Vertex *to;
-  Edge *edge;
+  const Vertex &source;
+  const Vertex &target;
+  const Edge &edge;
 
-  Link(Vertex *v1, Vertex *v2, Edge *e) : from(v1), to(v2), edge(e){};
+  Link(const Vertex &v1, const Vertex &v2, const Edge &e)
+      : source(v1), target(v2), edge(e){};
 
-  bool circle() {
-    if ((from != nullptr) && (to != nullptr) && (edge != nullptr)) {
-      return (from->id == to->id);
-    }
-    return false;
-  };
+  bool circle() const { return (source.id == target.id); };
 
-  inline int balance() const { return (from->balance() + to->balance()); }
+  int balance() const { return (source.balance() + target.balance()); }
 };
 
-typedef vector<GraphElement *> EdgeList;
-typedef vector<Vertex *> VertexList;
-typedef vector<Link *> LinkList;
+typedef std::vector<GraphElement *> EdgeList;
+typedef std::vector<Vertex *> VertexList;
+typedef std::vector<Link *> LinkList;
 
-typedef vector<LinkList> Net;
+typedef std::vector<LinkList> Net;
 
 // graph
 class Graph {
@@ -101,8 +87,9 @@ public:
   Graph();
   virtual ~Graph();
 
-  virtual void init(const string matrix_file);
-  inline virtual void init(const size_t rows, const size_t cols) {
+  virtual void loadFromFile(const std::string &matrix_file);
+
+  virtual void init(size_t rows) {
     m_vertices.clear();
     m_links.clear();
     m_edge_types.clear();
@@ -117,13 +104,12 @@ public:
     }
   }
 
-  virtual Link *link(const VERTEX_ID v1, const VERTEX_ID v2,
-                     const EDGE_TYPE type);
+  virtual Link *link(VERTEX_ID source, VERTEX_ID target, EDGE_TYPE type);
 
   virtual const bool good() const;
   virtual const size_t size() const;
 
-  inline virtual bool reachable(const VERTEX_ID v1, const VERTEX_ID v2) const {
+  virtual bool reachable(const VERTEX_ID v1, const VERTEX_ID v2) const {
     return m_reach_table->get(v1, v2);
   }
 
@@ -144,10 +130,10 @@ private:
 
   VertexList m_vertices;
   LinkList m_links;
-  EdgeList   m_edge_types;
+  EdgeList m_edge_types;
 
-  BitMap2
-      *m_reach_table; // a 2D bit map saving the reachable info of 2 vertices
+  // a 2D bit map saving the reachable info of 2 vertices
+  std::shared_ptr<BitMap2> m_reach_table;
 
   VertexList m_forks; // the vertices set which all the vertices' in degree less
                       // than out degress
@@ -173,13 +159,13 @@ private:
   void clonePath(const LinkList &path) {
     for (size_t i = 0; i < path.size(); ++i) {
       Link *l = path[i];
-      link(l->from->id, l->to->id, l->edge->type);
+      link(l->source->id, l->target->id, l->edge->type);
     }
   }
 
   inline static bool compareByLength(const LinkList *path1,
                                      const LinkList *path2) {
-    if (NULL == path1 || NULL == path2) {
+    if (nullptr == path1 || nullptr == path2) {
       throw std::runtime_error("null pointer");
     }
     return (path1->size() < path2->size());
